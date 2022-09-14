@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 @dataclass
-class ProjectEntity:
+class Project:
 
     id: int
     name: str
@@ -47,13 +47,13 @@ class ProjectService:
         )
         return error_if_not_200(response=response, log=log, action="project listing")
 
-    def read_all(self) -> List[ProjectEntity]:
+    def read_all(self) -> List[Project]:
         """
         Read the details of all projects.
         """
         raw = self._read_all_request()
         return [
-            ProjectEntity(**{f.name: r.get(f.name) for f in fields(ProjectEntity)})
+            Project(**{f.name: r.get(f.name) for f in fields(Project)})
             for r in raw
         ]
 
@@ -63,7 +63,7 @@ class ProjectService:
         )
         return error_if_not_200(response=response, log=log, action="project read")
 
-    def read(self, project_id: Optional[int] = None) -> ProjectEntity:
+    def read(self, project_id: Optional[int] = None) -> Project:
         """
         Read the details of a Project.
 
@@ -78,6 +78,6 @@ class ProjectService:
             raise err
         else:
             raw = self._read_request(project_id=pid)
-            return ProjectEntity(
-                **{f.name: raw.get(f.name) for f in fields(ProjectEntity)}
+            return Project(
+                **{f.name: raw.get(f.name) for f in fields(Project)}
             )

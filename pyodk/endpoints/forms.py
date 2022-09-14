@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 @dataclass
-class FormEntity:
+class Form:
 
     projectId: int
     xmlFormId: str
@@ -50,7 +50,7 @@ class FormService:
         )
         return error_if_not_200(response=response, log=log, action="form listing")
 
-    def read_all(self, project_id: Optional[int] = None) -> List[FormEntity]:
+    def read_all(self, project_id: Optional[int] = None) -> List[Form]:
         """
         Read the details of all Forms.
 
@@ -66,7 +66,7 @@ class FormService:
         else:
             raw = self._read_all_request(project_id=pid)
             return [
-                FormEntity(**{f.name: r.get(f.name) for f in fields(FormEntity)})
+                Form(**{f.name: r.get(f.name) for f in fields(Form)})
                 for r in raw
             ]
 
@@ -80,7 +80,7 @@ class FormService:
         self,
         form_id: str,
         project_id: Optional[int] = None,
-    ) -> FormEntity:
+    ) -> Form:
         """
         Read the details of a Form.
 
@@ -97,7 +97,7 @@ class FormService:
             raise err
         else:
             raw = self._read_request(project_id=pid, form_id=fid)
-            return FormEntity(**{f.name: raw.get(f.name) for f in fields(FormEntity)})
+            return Form(**{f.name: raw.get(f.name) for f in fields(Form)})
 
     def _read_odata_metadata_request(self, project_id: int, form_id: str) -> str:
         response = self.session.s.get(

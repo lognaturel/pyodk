@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 @dataclass
-class SubmissionEntity:
+class Submission:
 
     instanceId: str
     submitterId: int
@@ -47,7 +47,7 @@ class SubmissionService:
 
     def read_all(
         self, form_id: str, project_id: Optional[int] = None
-    ) -> List[SubmissionEntity]:
+    ) -> List[Submission]:
         """
         Read the details of all Submissions.
 
@@ -65,8 +65,8 @@ class SubmissionService:
         else:
             raw = self._read_all_request(project_id=pid, form_id=fid)
             return [
-                SubmissionEntity(
-                    **{f.name: r.get(f.name) for f in fields(SubmissionEntity)}
+                Submission(
+                    **{f.name: r.get(f.name) for f in fields(Submission)}
                 )
                 for r in raw
             ]
@@ -83,7 +83,7 @@ class SubmissionService:
         form_id: str,
         instance_id: str,
         project_id: Optional[int] = None,
-    ) -> SubmissionEntity:
+    ) -> Submission:
         """
         Read the details of a Submission.
 
@@ -102,8 +102,8 @@ class SubmissionService:
             raise err
         else:
             raw = self._read_request(project_id=pid, form_id=fid, instance_id=iid)
-            return SubmissionEntity(
-                **{f.name: raw.get(f.name) for f in fields(SubmissionEntity)}
+            return Submission(
+                **{f.name: raw.get(f.name) for f in fields(Submission)}
             )
 
     def _read_all_table_request(
