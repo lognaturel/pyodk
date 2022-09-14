@@ -1,5 +1,7 @@
 from typing import Optional
 
+from requests import Response
+
 from pyodk import config
 from pyodk.endpoints.auth import AuthService
 from pyodk.endpoints.forms import FormService
@@ -48,6 +50,25 @@ class Client:
     @project_id.setter
     def project_id(self, v: str):
         self._project_id = v
+
+    def get(self, path: str, **kwargs) -> Response:
+        return self.session.s.get(url=self._get_full_url(path), **kwargs)
+
+    def post(self, path: str, **kwargs) -> Response:
+        return self.session.s.post(url=self._get_full_url(path), **kwargs)
+
+    def put(self, path: str, **kwargs) -> Response:
+        return self.session.s.put(url=self._get_full_url(path), **kwargs)
+
+    def patch(self, path: str, **kwargs) -> Response:
+        return self.session.s.patch(url=self._get_full_url(path), **kwargs)
+
+    def delete(self, path: str, **kwargs) -> Response:
+        return self.session.s.delete(url=self._get_full_url(path), **kwargs)
+
+    def _get_full_url(self, path: str) -> str:
+        path = path.strip("/")
+        return f"{self.session.base_url}/v1/{path}"
 
     def _login(self):
         token = self.auth.get_token(
