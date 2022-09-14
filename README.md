@@ -61,19 +61,17 @@ The session cache file uses the TOML format. The default file name is `.pyodk_ca
 
 # Usage
 
+To use `pyodk`, you will first need to build a client.
 
-## Example
+Then, the library gives you two ways to interact with the Central API:
+- Methods that validate parameters and provide typed results. This gives you quick, well-documented access to the most common uses of the API.
+- The `.get`, `.post`, `.put`, `.patch`, `.delete` methods on a `Client` let you make direct requests to the Central API. This is useful if you need to make requests to endpoints not explicitly supported by this library or if you prefer to use the Central API documentation directly. You will need to do your own input validation, results typing and error handling.
 
+## Initializing a client
 ```python
 from pyodk.client import Client
 
-
-with Client() as client:
-    projects = client.projects.read_all()
-    forms = client.forms.read_all()
-    form_id = next(forms).xmlFormId
-    submissions = client.submissions.read_all(form_id=form_id)
-    form_data = client.submissions.read_all_table(form_id=form_id)
+client = Client()
 ```
 
 The `Client` is not specific to a project, but a default `project_id` can be set by:
@@ -82,15 +80,23 @@ The `Client` is not specific to a project, but a default `project_id` can be set
 - An init argument: `Client(project_id=1)`.
 - A property on the client: `client.project_id = 1`.
 
-The `Client` is specific to a configuration and cache file. These approximately correspond to the session which the `Client` represents; it also encourages segregating credentials. These paths can be set by:
+The `Client` is specific to a configuration and cache file. These correspond to the session which the `Client` represents and encourage segregating credentials. These paths can be set by:
 
 - Setting environment variables `PYODK_CONFIG_FILE` and `PYODK_CACHE_FILE`
 - Init arguments: `Client(config_path="my_config.toml", cache_path="my_cache.toml")`.
 
+## Library methods
 
-## Endpoints
+There are several modules which expose methods intended to provide easy access to the most common interactions with the Central API. Some map directly to single API calls and others wrap a few calls. If you"re not finding support for some action that you need to take, see below for direct access to the API and please file an issue describing what you"d like to be able to do!
 
-Available endpoints on `Client`:
+```python
+from pyodk.client import Client
+
+client = Client()
+projects = client.projects.read_all()
+```
+
+Available methods on `Client`:
 
 - Projects
   - read
@@ -103,6 +109,40 @@ Available endpoints on `Client`:
   - read
   - read_all
   - read_all_table
+
+## Direct requests to the Central API
+
+`Client` exposes methods that let you make direct calls to the Central API. These are identical to the corresponding methods in the [request library](https://requests.readthedocs.io/en/latest/api/#main-interface) except that they take in the endpoint path without the base URL and they use the configured authentication.
+
+The method name (`.get`, `.post`, `.put`, `.patch`, `.delete`) represents the [HTTP request method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods) of the request. In the [API docs](https://odkcentral.docs.apiary.io/), the HTTP method is specified next to the example URL.
+
+Let's say you want to retrieve the XLSForm for a past form version. You can start by finding the API documentation [here](https://odkcentral.docs.apiary.io/#reference/forms/published-form-versions/retrieving-form-version-xls(x)). The `GET` method is specified so you will use your client"s `.get` method. You can start by pasting the desired endpoint path as a parameter:
+
+```
+r = client.get("/projects/projectId/forms/xmlFormId/versions/version.xlsx")
+```
+
+The parts of the URL that are colored in Apiary are parameters that you need to set. For example, let's say you want to access version `2011080401` of a form with the form ID `foo` in project `7` on your server, you would fill in the placeholders as follows:
+
+```
+r = client.get("/projects/7/forms/foo/versions/2011080401.xlsx")
+```
+The `r` variable now holds a [Response](https://requests.readthedocs.io/en/latest/api/#requests.Response) object representing the response to your request. If the request was successful, you can access the bytes of the file with `r.content` and do things like open it with [`openpyxl`](https://openpyxl.readthedocs.io/en/stable/) or write the bytes to a file.
+
+If your request needs to specify some attributes, you can use request's [data parameter](https://requests.readthedocs.io/en/latest/api/#requests.request). 
+
+For example, let's say you want to create a new App User with name "Lab Tech". Start by reviewing the [API docs](https://odkcentral.docs.apiary.io/#reference/accounts-and-users/app-users/creating-a-new-app-user). The `POST` method is specified so you will use your client's `.post` method. As above, you can copy the path and fill in values for the parameters:
+
+```
+r = client.post("/projects/7/app-users")
+```
+
+You also need to specify a value for the `displayName` attribute in your request:
+
+```
+r = client.post("/projects/7/app-users", data={"displayName": "Lab Tech"})
+```
+The `r` variable now holds a [Response](https://requests.readthedocs.io/en/latest/api/#requests.Response) object representing the response to your request. If the request was successful, you can access the response json by calling `r.json()`. You can then do things like use the `id` or `token` in additional requests.
 
 
 ## Logging
